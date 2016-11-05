@@ -42,6 +42,42 @@ public class ContatoDao {
 		}
 	}
 
+	public void altera(Contato contato) {
+		String sql = "update contatos set nome=?, email=?, endereco=?, dataNascimento=? where id=?";
+		try {
+			// prepared statement para alteracao
+			PreparedStatement stmt = connection.prepareStatement(sql);
+
+			// seta os valores
+			stmt.setString(1, contato.getNome());
+			stmt.setString(2, contato.getEmail());
+			stmt.setString(3, contato.getEndereco());
+			stmt.setDate(4, new Date(contato.getDataNascimento().getTimeInMillis()));
+			stmt.setLong(5, contato.getId());
+
+			// executa
+			stmt.execute();
+			stmt.close();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void remove(Contato contato) {
+		String sql = "delete from contatos where id=?";
+		try {
+			// prepared statement para remocao
+			PreparedStatement stmt = connection.prepareStatement(sql);
+
+			// set os valors
+			stmt.setLong(1, contato.getId());
+			stmt.execute();
+			stmt.close();
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	public List<Contato> getLista() {
 		try {
 			List<Contato> contatos = new ArrayList<>();
@@ -73,4 +109,29 @@ public class ContatoDao {
 		}
 	}
 
+	public Contato pesquisaPor(int id) {
+		try {
+			Contato contato = null;
+			// prepared statement para pesquisa
+			PreparedStatement stmt = this.connection.prepareStatement("select * from contatos where id = ?");
+			stmt.setInt(1, id);
+			ResultSet rs = stmt.executeQuery();
+			if (rs.next()) {
+				contato = new Contato();
+				contato.setId(rs.getLong("id"));
+				contato.setNome(rs.getString("nome"));
+				contato.setEmail(rs.getString("email"));
+				contato.setEndereco(rs.getString("endereco"));
+				// montando a data através do Calendar
+				Calendar data = Calendar.getInstance();
+				data.setTime(rs.getDate("dataNascimento"));
+				contato.setDataNascimento(data);
+			}
+			rs.close();
+			stmt.close();
+			return contato;
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
